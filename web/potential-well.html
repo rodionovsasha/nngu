@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ННГУ — потенциальный ящик · учебная модель</title>
+  <style>
+    :root{color-scheme:light;--ink:#1e3354;--muted:#60728b;--line:#dce5f0;--blue:#346fc6;--teal:#119988;--orange:#df8438;--pale:#f3f7fc}
+    *{box-sizing:border-box}body{margin:0;background:var(--pale);font-family:system-ui,-apple-system,"Segoe UI",Arial,sans-serif;color:var(--ink)}
+    main{max-width:1360px;margin:0 auto;padding:22px 22px 32px}
+    h1{margin:0;font-size:clamp(22px,2.6vw,30px);font-weight:750;letter-spacing:-.03em}
+    .sub{margin:6px 0 19px;color:var(--muted);font-size:14px}
+    .controls{display:flex;flex-wrap:wrap;align-items:end;gap:14px;padding:16px;background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:0 3px 10px #18324b09}
+    label{display:grid;gap:7px;font-size:12px;font-weight:650;color:#465a75}
+    input[type=number]{width:112px;height:38px;border:1px solid #cad6e5;border-radius:9px;padding:4px 9px;font:inherit;font-size:16px;color:var(--ink)}
+    input[type=range]{width:170px;accent-color:var(--blue)}.range{min-width:175px}.range strong{font-size:12px}
+    .buttons{margin-left:auto;display:flex;gap:9px;flex-wrap:wrap}.button{font:inherit;padding:10px 15px;font-weight:650;border:1px solid #c6d5e6;border-radius:9px;color:var(--ink);background:#fff;cursor:pointer}
+    .button.primary{background:var(--blue);color:#fff;border-color:var(--blue)}.button:hover{filter:brightness(.96)}
+    .tabs{display:flex;gap:10px;margin:17px 0 13px;flex-wrap:wrap}.tab{padding:11px 17px;background:#e7edf5;color:#47617e;border:0;border-radius:10px;font-weight:700;cursor:pointer}.tab.active{background:#fff;color:var(--blue);box-shadow:0 1px 8px #17355518}
+    .tab-panel[hidden]{display:none!important}.grid{display:grid;grid-template-columns:minmax(330px,0.78fr) minmax(410px,1.22fr);gap:12px}.stack{display:grid;gap:12px}
+    .panel{background:white;border-radius:14px;border:1px solid var(--line);padding:16px;min-width:0}.panel h2{margin:0 0 4px;font-size:17px}.desc{margin:0 0 10px;color:var(--muted);font-size:12px;line-height:1.4}
+    canvas{display:block;width:100%;height:260px}.well{height:580px}.transition{height:440px}.stats{margin-top:12px;display:flex;flex-wrap:wrap;gap:9px}
+    .stat{background:#eef4fb;border:1px solid #dce8f5;border-radius:9px;padding:10px 13px;flex:1 1 190px}.stat small{display:block;color:#536982;font-size:11px;margin-bottom:5px}.stat strong{display:block;font-size:16px;font-variant-numeric:tabular-nums}
+    .foot{color:#718096;font-size:12px;line-height:1.65;margin-top:17px}.note{background:#fff7ed;padding:12px 14px;border:1px solid #f6dbb9;border-radius:10px;color:#855723;font-size:13px}
+    @media(max-width:850px){.grid{grid-template-columns:1fr}.well{height:380px}.controls{gap:11px}.buttons{margin-left:0;width:100%}.transition{height:340px}}
+  </style>
+</head>
+<body>
+<main>
+  <h1>Частица в потенциальном ящике</h1>
+  <p class="sub">ННГУ · Квантовая механика · одномерная бесконечно глубокая потенциальная яма · автономная визуализация</p>
+  <section class="controls" aria-label="Параметры расчёта">
+    <label>Ширина L, нм <input id="width" type="number" min="0.05" max="10" step="0.05" value="0.6"></label>
+    <label>Масса m / mₑ <input id="mass" type="number" min="0.05" max="100" step="0.05" value="1"></label>
+    <label>Уровней <input id="count" type="number" min="1" max="10" step="1" value="5"></label>
+    <label>Выбран n <input id="level" type="number" min="1" max="5" step="1" value="1"></label>
+    <label class="range"><strong id="positionLabel">Координата x = 0,150 нм</strong><input id="position" type="range" min="0" max="1000" step="1" value="250"></label>
+    <div class="buttons"><button id="reset" class="button" type="button">Сбросить</button><button id="export" class="button primary" type="button">Сохранить PNG</button></div>
+  </section>
+  <nav class="tabs" aria-label="Разделы визуализации">
+    <button class="tab active" data-tab="spectrum" type="button">1 · Уровни, ψ(x), |ψ(x)|²</button>
+    <button class="tab" data-tab="transition" type="button">2 · Переход 2 → 1 и фотон</button>
+  </nav>
+  <section id="spectrum" class="tab-panel">
+    <div class="grid">
+      <section class="panel"><h2>Энергетические уровни</h2><p class="desc">Уровни схематичны по высоте, точные энергии указаны в подписях.</p><canvas id="energy" class="well" aria-label="Диаграмма уровней энергии"></canvas></section>
+      <div class="stack">
+        <section class="panel"><h2>Волновая функция ψₙ(x)</h2><p class="desc">Нормированная волновая функция, единица: нм⁻¹ᐟ²</p><canvas id="wave" aria-label="График волновой функции"></canvas></section>
+        <section class="panel"><h2>Плотность вероятности |ψₙ(x)|²</h2><p class="desc">Вероятность нахождения частицы по координате, единица: нм⁻¹</p><canvas id="density" aria-label="График плотности вероятности"></canvas></section>
+      </div>
+    </div>
+    <div class="stats">
+      <div class="stat"><small>Энергия выбранного уровня</small><strong id="selectedEnergy">—</strong></div>
+      <div class="stat"><small>Волновая функция ψₙ(x)</small><strong id="psi">—</strong></div>
+      <div class="stat"><small>Плотность вероятности |ψₙ(x)|²</small><strong id="rho">—</strong></div>
+    </div>
+  </section>
+  <section id="transition" class="tab-panel" hidden>
+    <section class="panel"><h2>Переход электрона со второго уровня на первый</h2><p class="desc">Энергия испускаемого фотона ΔE = E₂ − E₁ = hν = hc/λ</p><canvas id="photon" class="transition" aria-label="Схема испускания фотона"></canvas></section>
+    <div class="stats">
+      <div class="stat"><small>Минимальная энергия E₁</small><strong id="e1">—</strong></div>
+      <div class="stat"><small>Энергия E₂</small><strong id="e2">—</strong></div>
+      <div class="stat"><small>Разность E₂ − E₁</small><strong id="delta">—</strong></div>
+      <div class="stat"><small>Длина волны λ</small><strong id="lambda">—</strong></div>
+      <div class="stat"><small>Частота фотона ν</small><strong id="frequency">—</strong></div>
+    </div>
+    <p class="note">Масса частицы здесь всегда равна массе электрона mₑ; поле «Масса m / mₑ» относится только к первой вкладке.</p>
+  </section>
+  <p class="foot">Формулы: Eₙ = n²h² / (8mL²); ψₙ(x) = √(2/L) sin(nπx/L); |ψₙ(x)|². Константы: h = 6,62607015·10⁻³⁴ Дж·с, mₑ = 9,1093837139·10⁻³¹ кг, c = 299792458 м/с. Расчёт предназначен для идеальной одномерной модели. Эта страница работает без интернета и не отправляет данные на сервер.</p>
+</main>
+<script>
+'use strict';
+(() => {
+  const H=6.62607015e-34, ME=9.1093837139e-31, EV=1.602176634e-19, C=299792458;
+  const $=id=>document.getElementById(id);
+  const colors={ink:'#1e3354',muted:'#60728b',grid:'#dde6f0',blue:'#346fc6',teal:'#119988',orange:'#df8438',wall:'#8da0b8'};
+  let active='spectrum';
+  const fmt=(v,d=4)=>v.toLocaleString('ru-RU',{maximumFractionDigits:d,minimumFractionDigits:d});
+  const fmtExp=v=>v.toExponential(4).replace('e+','×10^').replace('e-','×10^-');
+  const number=(id,lo,hi,fallback)=>{let v=Number($(id).value);return Number.isFinite(v)?Math.max(lo,Math.min(hi,v)):fallback};
+  function state(){
+    const L=number('width',.05,10,.6),m=number('mass',.05,100,1);
+    const count=Math.round(number('count',1,10,5)); $('level').max=String(count);
+    const n=Math.round(number('level',1,count,1)),f=Number($('position').value)/1000;
+    return {L,m,count,n,f,x:L*f};
+  }
+  const energy=(n,L,m=1)=>n*n*H*H/(8*ME*m*(L*1e-9)**2)/EV;
+  const wave=(n,x,L)=>x<=0||x>=L?0:Math.sqrt(2/L)*Math.sin(n*Math.PI*x/L);
+  function canvasCtx(id){
+    const canvas=$(id),width=canvas.clientWidth,height=canvas.clientHeight;
+    if(!width||!height)return null;
+    const dpr=Math.max(1,Math.min(window.devicePixelRatio||1,2));
+    canvas.width=Math.round(width*dpr);canvas.height=Math.round(height*dpr);
+    const ctx=canvas.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);
+    ctx.clearRect(0,0,width,height);ctx.fillStyle='#fff';ctx.fillRect(0,0,width,height);
+    ctx.font='12px system-ui,-apple-system,sans-serif';ctx.lineWidth=1.4;
+    return {ctx,width,height};
+  }
+  function line(ctx,x1,y1,x2,y2,color=colors.grid,width=1){ctx.strokeStyle=color;ctx.lineWidth=width;ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke()}
+  function text(ctx,msg,x,y,color=colors.ink,size=12,align='left'){
+    ctx.fillStyle=color;ctx.font=`${size}px system-ui,-apple-system,sans-serif`;ctx.textAlign=align;ctx.fillText(msg,x,y);
+  }
+  function drawEnergy(s){
+    const b=canvasCtx('energy');if(!b)return;const {ctx,width:w,height:h}=b;
+    const x0=Math.max(90,Math.min(150,w*.32)),x1=w-24,top=40,bottom=h-45;
+    ctx.fillStyle='#f6f9fd';ctx.fillRect(x0,top,x1-x0,bottom-top);
+    line(ctx,x0,top,x0,bottom,colors.wall,5);line(ctx,x1,top,x1,bottom,colors.wall,5);
+    line(ctx,x0,bottom,x1,bottom,colors.wall,3);
+    text(ctx,'V = ∞',x0,25,colors.muted,12,'center');text(ctx,'V = ∞',x1,25,colors.muted,12,'center');
+    for(let n=1;n<=s.count;n++){
+      const y=bottom-24-(n-1)*((bottom-top-65)/Math.max(1,s.count-1));
+      line(ctx,x0+8,y,x1-8,y,n===s.n?colors.orange:colors.blue,n===s.n?3.5:2.2);
+      text(ctx,`E${n} = ${fmt(energy(n,s.L,s.m),3)} эВ`,x0-10,y+4,n===s.n?colors.orange:colors.ink,Math.min(12,11+(w>400?1:0)),'right');
+    }
+    text(ctx,'x = 0',x0,bottom+24,colors.muted,12,'center');text(ctx,`x = ${fmt(s.L,2)} нм`,x1-28,bottom+24,colors.muted,12,'center');
+  }
+  function drawCurve(id,s,isDensity){
+    const b=canvasCtx(id);if(!b)return;const {ctx,width:w,height:h}=b;
+    const left=54,right=w-20,top=18,bottom=h-34,mid=(top+bottom)/2,amp=Math.sqrt(2/s.L);
+    for(let k=0;k<=4;k++){const gx=left+(right-left)*k/4;line(ctx,gx,top,gx,bottom);text(ctx,fmt(s.L*k/4,2),gx,bottom+19,colors.muted,11,'center')}
+    for(let k=0;k<=4;k++){const gy=top+(bottom-top)*k/4;line(ctx,left,gy,right,gy)}
+    line(ctx,left,bottom,right,bottom,colors.wall,1.4);
+    const toX=t=>left+t*(right-left);
+    const toY=y=>isDensity?bottom-y/(2/s.L)*(.85*(bottom-top)) : mid-y/amp*(.40*(bottom-top));
+    if(!isDensity)line(ctx,left,mid,right,mid,colors.wall,1.3);
+    ctx.beginPath();ctx.lineWidth=2.6;ctx.strokeStyle=isDensity?colors.teal:colors.blue;
+    for(let i=0;i<=500;i++){
+      const t=i/500,v=wave(s.n,t*s.L,s.L),y=toY(isDensity?v*v:v);
+      if(i===0)ctx.moveTo(toX(t),y);else ctx.lineTo(toX(t),y);
+    }ctx.stroke();
+    const selected=wave(s.n,s.x,s.L);let pointValue=isDensity?selected*selected:selected;
+    const px=toX(s.f),py=toY(pointValue);
+    line(ctx,px,top,px,bottom,colors.orange,1.2);
+    ctx.fillStyle=colors.orange;ctx.beginPath();ctx.arc(px,py,4.4,0,2*Math.PI);ctx.fill();
+    text(ctx,isDensity?'|ψ|²':'ψ',5,23,colors.muted,12);
+    text(ctx,'x, нм',right,bottom+31,colors.muted,11,'right');
+  }
+  function drawPhoton(s){
+    const b=canvasCtx('photon');if(!b)return;const {ctx,width:w,height:h}=b;
+    const left=Math.max(45,w*.12),end=Math.min(w*.72,w-190),upper=h*.27,lower=h*.7;
+    line(ctx,left,upper,end,upper,colors.blue,3);line(ctx,left,lower,end,lower,colors.blue,3);
+    text(ctx,`E₂ = ${fmt(energy(2,s.L),5)} эВ`,left,upper-16,colors.ink,15);
+    text(ctx,`E₁ = ${fmt(energy(1,s.L),5)} эВ`,left,lower+26,colors.ink,15);
+    let arrowX=(left+end)*.58;line(ctx,arrowX,upper+10,arrowX,lower-10,colors.orange,4);
+    ctx.beginPath();ctx.fillStyle=colors.orange;ctx.moveTo(arrowX,lower-2);ctx.lineTo(arrowX-9,lower-17);ctx.lineTo(arrowX+9,lower-17);ctx.fill();
+    const pStart=arrowX+14,pEnd=w-28,center=(upper+lower)/2;
+    ctx.beginPath();ctx.strokeStyle=colors.orange;ctx.lineWidth=2.6;
+    for(let i=0;i<=170;i++){
+      let x=pStart+(pEnd-pStart)*i/170, y=center+16*Math.sin(2*Math.PI*i/32);
+      if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);
+    }ctx.stroke();
+    text(ctx,'испущенный фотон',pEnd,center-28,colors.orange,13,'right');
+    text(ctx,`ΔE = ${fmt(energy(2,s.L)-energy(1,s.L),5)} эВ`,arrowX+14,lower+56,colors.ink,13);
+    text(ctx,'Переход 2 → 1',left,h-24,colors.muted,12);
+  }
+  function render(){
+    const s=state(),t1=energy(1,s.L),t2=energy(2,s.L),delta=(t2-t1);
+    $('positionLabel').textContent=`Координата x = ${fmt(s.x,3)} нм`;
+    $('selectedEnergy').textContent=`E${s.n} = ${fmt(energy(s.n,s.L,s.m),6)} эВ`;
+    const p=wave(s.n,s.x,s.L);$('psi').textContent=`${fmt(p,6)} нм⁻¹ᐟ²`;
+    $('rho').textContent=`${fmt(p*p,6)} нм⁻¹`;
+    $('e1').textContent=`${fmt(t1,6)} эВ`;$('e2').textContent=`${fmt(t2,6)} эВ`;
+    $('delta').textContent=`${fmt(delta,6)} эВ`;
+    const wavelength=H*C/(delta*EV)/1e-9;
+    $('lambda').textContent=`${fmt(wavelength,3)} нм`;
+    $('frequency').textContent=`${(delta*EV/H).toExponential(5)} Гц`;
+    if(active==='spectrum'){drawEnergy(s);drawCurve('wave',s,false);drawCurve('density',s,true)}else drawPhoton(s);
+  }
+  function exportPng(){
+    const ids=active==='spectrum'?['energy','wave','density']:['photon'];
+    const out=document.createElement('canvas'),ctx=out.getContext('2d');
+    out.width=1400;out.height=active==='spectrum'?930:620;
+    ctx.fillStyle='#f4f7fb';ctx.fillRect(0,0,out.width,out.height);
+    ctx.fillStyle=colors.ink;ctx.font='bold 30px system-ui';ctx.fillText('ННГУ · Частица в потенциальном ящике',35,48);
+    ctx.font='17px system-ui';ctx.fillStyle=colors.muted;ctx.fillText(active==='spectrum'?'Спектр энергии, волновая функция и плотность вероятности':'Переход электрона 2 → 1',35,80);
+    function put(id,x,y,w,h){const c=$(id);ctx.fillStyle='#fff';ctx.fillRect(x,y,w,h);ctx.drawImage(c,x,y,w,h)}
+    if(active==='spectrum'){put(ids[0],30,110,560,780);put(ids[1],610,110,760,372);put(ids[2],610,502,760,388)}
+    else put(ids[0],30,110,1340,470);
+    const link=document.createElement('a');link.href=out.toDataURL('image/png');link.download=`nngu-potential-well-${active}.png`;link.click();
+  }
+  ['width','mass','count','level','position'].forEach(id=>$(id).addEventListener('input',render));
+  document.querySelectorAll('.tab').forEach(button=>button.addEventListener('click',()=>{
+    active=button.dataset.tab;
+    document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x===button));
+    document.querySelectorAll('.tab-panel').forEach(p=>p.hidden=p.id!==active);
+    requestAnimationFrame(render);
+  }));
+  $('reset').addEventListener('click',()=>{
+    $('width').value='0.6';$('mass').value='1';$('count').value='5';$('level').value='1';$('position').value='250';render();
+  });
+  $('export').addEventListener('click',exportPng);
+  window.addEventListener('resize',()=>requestAnimationFrame(render));
+  render();
+})();
+</script>
+</body>
+</html>

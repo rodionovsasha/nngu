@@ -1,0 +1,25 @@
+# Результаты сборки
+build/
+*.class
+
+# Локальный пересобранный JAR (готовый JAR может храниться отдельно в релизах)
+# Удалите следующую строку, если планируете коммитить JAR.
+# PotentialWellVisualizer.jar
+
+# macOS
+.DS_Store
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+
+# Visual Basic / .NET SDK
+**/bin/
+**/obj/
+.vs/
+
+# IDEs
+.idea/
+*.iml
