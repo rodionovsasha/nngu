@@ -18,6 +18,18 @@ public final class QuantumWellModelTest {
         reject(() -> new QuantumWellModel(0.6, 1, 5, 1, Double.NaN));
         new QuantumWellModel(0.05, 0.05, 1, 1, 0);
         new QuantumWellModel(10, 100, 10, 10, 1);
+        // Каждый кадр сценария должен задавать допустимое состояние GUI.
+        for (int index = 0; index < QuantumWellDemo.FRAMES; index++) {
+            var frame = QuantumWellDemo.frame(index);
+            if (frame.caption().isBlank() || frame.model().level() > frame.model().count()) {
+                throw new AssertionError("Некорректный кадр " + index);
+            }
+        }
+        close(QuantumWellDemo.frame(285).seconds(), QuantumWellDemo.frame(314).seconds());
+        if (!QuantumWellDemo.frame(315).transition()) throw new AssertionError("Не открыта вкладка перехода");
+        close(QuantumWellDemo.frame(375).model().wavelengthNm(), reference.wavelengthNm());
+        reject(() -> QuantumWellDemo.frame(-1));
+        reject(() -> QuantumWellDemo.frame(QuantumWellDemo.FRAMES));
         System.out.println("Проверки общей модели GUI пройдены.");
     }
     private static void close(double actual, double expected) {

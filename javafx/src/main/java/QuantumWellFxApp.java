@@ -163,7 +163,12 @@ public final class QuantumWellFxApp extends Application {
             }
         };
         var args = getParameters().getRaw();
-        if (args.contains("--demo-png")) {
+        if (args.contains("--demo-frames")) {
+            int index = args.indexOf("--demo-frames");
+            if (index + 1 >= args.size()) throw new IllegalArgumentException("--demo-frames требует каталог");
+            hint.setStyle("-fx-font-size: 13; -fx-text-fill: #66e4ff;");
+            Platform.runLater(() -> recordFrame(new File(args.get(index + 1)), 0, tabs, pause));
+        } else if (args.contains("--demo-png")) {
             int index = args.indexOf("--demo-png");
             if (index + 1 >= args.size()) throw new IllegalArgumentException("--demo-png требует путь к PNG");
             seconds = transition ? 2.7 : 0.7;
@@ -176,6 +181,36 @@ public final class QuantumWellFxApp extends Application {
     }
 
     @Override public void stop() { if (timer != null) timer.stop(); }
+
+    /** Захват реального Scene Graph: меняются те же контролы, что и при ручном управлении. */
+    private void recordFrame(File directory, int index, ToggleGroup tabs, Button pause) {
+        try {
+            var frame = QuantumWellDemo.frame(index);
+            var state = frame.model();
+            updating = true;
+            width.getValueFactory().setValue(state.widthNm());
+            mass.getValueFactory().setValue(state.massRatio());
+            count.getValueFactory().setValue(state.count());
+            ((SpinnerValueFactory.IntegerSpinnerValueFactory) level.getValueFactory()).setMax(state.count());
+            level.getValueFactory().setValue(state.level());
+            position.setValue(state.xFraction());
+            effects.setSelected(frame.effects());
+            paused = frame.paused();
+            pause.setText(paused ? "▶  Продолжить" : "Ⅱ  Пауза");
+            tabs.selectToggle(tabs.getToggles().get(frame.transition() ? 1 : 0));
+            seconds = frame.seconds();
+            updating = false;
+            update();
+            hint.setText("ДЕМО · " + frame.caption());
+            if (index == 14 * QuantumWellDemo.FPS) save(new File(directory.getParentFile(), "javafx-export.png"));
+            save(new File(directory, fmt("%04d.png", index)));
+            if (index + 1 == QuantumWellDemo.FRAMES) Platform.exit();
+            else Platform.runLater(() -> recordFrame(directory, index + 1, tabs, pause));
+        } catch (IOException ex) {
+            Platform.exit();
+            throw new java.io.UncheckedIOException(ex);
+        }
+    }
 
     private void update() {
         if (updating) return;

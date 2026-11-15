@@ -9,7 +9,7 @@ tasks.withType<JavaCompile>().configureEach {
 sourceSets {
     main {
         java.srcDir(rootProject.projectDir)
-        java.include("PotentialWellSpectrum.java", "ElectronPhotonTransition.java", "QuantumWellModel.java")
+        java.include("PotentialWellSpectrum.java", "ElectronPhotonTransition.java", "QuantumWellModel.java", "QuantumWellDemo.java")
     }
     test {
         java.srcDir(rootProject.projectDir)

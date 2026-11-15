@@ -9,6 +9,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.snapshots.Snapshot
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.ImageComposeScene
 import androidx.compose.ui.Modifier
@@ -53,6 +54,12 @@ private val Scheme = darkColorScheme(
 private fun fmt(pattern: String, vararg args: Any) = String.format(Locale.US, pattern, *args)
 
 fun main(args: Array<String>) {
+    val frames = args.indexOf("--demo-frames")
+    if (frames >= 0) {
+        require(frames + 1 < args.size) { "--demo-frames требует каталог" }
+        recordFrames(File(args[frames + 1]))
+        return
+    }
     val demo = args.indexOf("--demo-png")
     if (demo >= 0) {
         require(demo + 1 < args.size) { "--demo-png требует путь к PNG" }
@@ -79,13 +86,14 @@ private fun Laboratory(
     initialEffects: Boolean = true,
     initialSeconds: Double = 0.0,
     initialPaused: Boolean = false,
-    preview: Boolean = false
+    preview: Boolean = false,
+    demoCaption: String = ""
 ) {
-    var model by remember { mutableStateOf(initialModel) }
-    var transition by remember { mutableStateOf(initialTransition) }
-    var effects by remember { mutableStateOf(initialEffects) }
-    var paused by remember { mutableStateOf(initialPaused) }
-    var seconds by remember { mutableDoubleStateOf(initialSeconds) }
+    var model by remember(initialModel) { mutableStateOf(initialModel) }
+    var transition by remember(initialTransition) { mutableStateOf(initialTransition) }
+    var effects by remember(initialEffects) { mutableStateOf(initialEffects) }
+    var paused by remember(initialPaused) { mutableStateOf(initialPaused) }
+    var seconds by remember(initialSeconds) { mutableDoubleStateOf(initialSeconds) }
     var message by remember { mutableStateOf("") }
     var exporting by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
@@ -205,10 +213,11 @@ private fun Laboratory(
                 }
                 // Время читается в Canvas: анимация перерисовывает график, а не все контролы.
                 QuantumPlot(model, transition, effects, { seconds }, Modifier.weight(1f).fillMaxWidth()) { model = it }
-                Text(message.ifEmpty {
+                Text(demoCaption.ifEmpty { message.ifEmpty {
                     if (transition) fmt("ΔE = hν = hc/λ  ·  ν = %.5e Гц  ·  m = mₑ  ·  время анимации условное", model.frequencyHz())
                     else "Выберите n на спектре и x на графике.  Re ψ = ψ₀ cos φ; Im ψ = −ψ₀ sin φ (пунктир); |ψ|² стационарна."
-                }, color = Muted, fontSize = 11.sp, modifier = Modifier.heightIn(min = 38.dp))
+                } }, color = if (demoCaption.isEmpty()) Muted else Cyan,
+                    fontSize = if (demoCaption.isEmpty()) 11.sp else 13.sp, modifier = Modifier.heightIn(min = 38.dp))
             }
         }
     }
@@ -410,4 +419,36 @@ private fun savePng(file: File, model: QuantumWellModel, transition: Boolean, ef
         } finally { image.close() }
     } finally { scene.close() }
     println("PNG: ${file.absolutePath}")
+}
+
+/** Покадровая запись того же Compose UI, без захвата рабочего стола и микрофона. */
+@OptIn(ExperimentalComposeUiApi::class)
+private fun recordFrames(directory: File) {
+    check(directory.isDirectory || directory.mkdirs()) { "Не удалось создать $directory" }
+    var frame by mutableStateOf(QuantumWellDemo.frame(0))
+    val scene = ImageComposeScene(width = 1360, height = 880, density = Density(1f)) {
+        val state = frame
+        MaterialTheme(colorScheme = Scheme) {
+            Laboratory(state.model(), state.transition(), state.effects(), state.seconds(), state.paused(),
+                preview = true, demoCaption = "ДЕМО · ${state.caption()}")
+        }
+    }
+    try {
+        repeat(QuantumWellDemo.FRAMES) { index ->
+            frame = QuantumWellDemo.frame(index)
+            Snapshot.sendApplyNotifications()
+            val image = scene.render(index * 1_000_000_000L / QuantumWellDemo.FPS)
+            try {
+                val data = checkNotNull(image.encodeToData(EncodedImageFormat.PNG))
+                try {
+                    val file = File(directory, fmt("%04d.png", index + QuantumWellDemo.FRAMES))
+                    file.writeBytes(data.bytes)
+                    if (index == 14 * QuantumWellDemo.FPS) {
+                        file.copyTo(File(directory.parentFile, "compose-export.png"), overwrite = true)
+                    }
+                } finally { data.close() }
+            } finally { image.close() }
+            if (index % QuantumWellDemo.FPS == 0) println("Compose: ${index / QuantumWellDemo.FPS + 1}/15 с")
+        }
+    } finally { scene.close() }
 }
