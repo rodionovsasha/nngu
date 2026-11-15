@@ -1,0 +1,41 @@
+.root {
+    -fx-font-family: "System";
+    -fx-font-size: 13px;
+    -fx-base: #17263e;
+    -fx-accent: #66e4ff;
+    -fx-focus-color: #66e4ff;
+    -fx-faint-focus-color: #66e4ff22;
+    -fx-text-fill: #eaf3ff;
+}
+.label, .check-box { -fx-text-fill: #dce9fa; }
+.card {
+    -fx-background-color: linear-gradient(to bottom right, #17263e, #111d32);
+    -fx-background-radius: 16;
+    -fx-border-color: #2a3b54;
+    -fx-border-radius: 16;
+    -fx-padding: 18;
+}
+.badge {
+    -fx-background-color: #18384a;
+    -fx-text-fill: #66e4ff;
+    -fx-background-radius: 20;
+    -fx-padding: 10 18;
+}
+.button, .toggle-button {
+    -fx-background-radius: 10;
+    -fx-padding: 10 15;
+    -fx-cursor: hand;
+    -fx-background-color: #223550;
+    -fx-text-fill: #dce9fa;
+}
+.button:hover, .toggle-button:hover { -fx-background-color: #304967; }
+.button.primary, .toggle-button:selected {
+    -fx-background-color: #66e4ff;
+    -fx-text-fill: #081625;
+    -fx-font-weight: bold;
+}
+.spinner { -fx-pref-width: 195; -fx-background-radius: 8; }
+.spinner .text-field { -fx-text-fill: #eaf3ff; -fx-background-color: #0c1729; }
+.scroll-pane > .viewport { -fx-background-color: transparent; }
+.slider .track { -fx-background-color: #314762; }
+.slider .thumb { -fx-background-color: #66e4ff; }

@@ -23,3 +23,7 @@ __pycache__/
 # IDEs
 .idea/
 *.iml
+
+# Gradle / Kotlin
+.gradle/
+.kotlin/
