@@ -1,10 +1,16 @@
 """Проверки формул (python3 -m unittest discover -s python -p 'test_*.py' -v)."""
 import math
 import unittest
-from physics import (
-    PLANCK, SPEED_OF_LIGHT, ELECTRON_VOLT, energy_joules, energy_ev,
-    wave_function, probability_density, electron_transition,
-)
+if __package__:
+    from .physics import (
+        PLANCK, SPEED_OF_LIGHT, ELECTRON_VOLT, energy_joules, energy_ev,
+        wave_function, probability_density, electron_transition,
+    )
+else:
+    from physics import (
+        PLANCK, SPEED_OF_LIGHT, ELECTRON_VOLT, energy_joules, energy_ev,
+        wave_function, probability_density, electron_transition,
+    )
 
 
 class QuantumWellTests(unittest.TestCase):

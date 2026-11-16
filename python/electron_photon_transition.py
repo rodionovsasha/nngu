@@ -3,7 +3,10 @@
 Запуск: python3 python/electron_photon_transition.py [L_нм]
 """
 import argparse
-from physics import ELECTRON_VOLT, electron_transition, parse_float
+if __package__:
+    from .physics import ELECTRON_VOLT, electron_transition, parse_float
+else:
+    from physics import ELECTRON_VOLT, electron_transition, parse_float
 
 
 def main(argv: list[str] | None = None) -> None:

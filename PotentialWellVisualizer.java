@@ -12,11 +12,9 @@ import java.util.Locale;
 
 /**
  * Интерактивная учебная модель бесконечно глубокой одномерной потенциальной ямы.
- *
  * Оба расчёта используют формулы исходных консольных классов:
  *   PotentialWellSpectrum      — спектр, волновые функции, плотности вероятности;
  *   ElectronPhotonTransition   — переход электрона 2 → 1 и энергия фотона.
- *
  * Только Java Swing/Java2D, без внешних зависимостей. Совместимо с Java 25.
  * Запуск: java PotentialWellVisualizer
  * Экспорт примера без GUI: java PotentialWellVisualizer --demo-png preview.png
@@ -147,9 +145,9 @@ public final class PotentialWellVisualizer {
         frame.add(tabs, BorderLayout.CENTER);
 
         JButton export = new JButton("Сохранить график в PNG");
-        export.addActionListener(e -> exportActiveTab());
+        export.addActionListener(_ -> exportActiveTab());
         JButton reset = new JButton("Сбросить параметры");
-        reset.addActionListener(e -> reset());
+        reset.addActionListener(_ -> reset());
         JPanel footer = new JPanel(new BorderLayout());
         footer.setBackground(PALE);
         footer.setBorder(new EmptyBorder(9, 22, 15, 22));
@@ -164,11 +162,11 @@ public final class PotentialWellVisualizer {
         footer.add(buttons, BorderLayout.EAST);
         frame.add(footer, BorderLayout.SOUTH);
 
-        widthSpinner.addChangeListener(e -> update());
-        massSpinner.addChangeListener(e -> update());
-        countSpinner.addChangeListener(e -> update());
-        levelSpinner.addChangeListener(e -> update());
-        positionSlider.addChangeListener(e -> update());
+        widthSpinner.addChangeListener(_ -> update());
+        massSpinner.addChangeListener(_ -> update());
+        countSpinner.addChangeListener(_ -> update());
+        levelSpinner.addChangeListener(_ -> update());
+        positionSlider.addChangeListener(_ -> update());
         update();
     }
 
@@ -189,6 +187,8 @@ public final class PotentialWellVisualizer {
         settings.count = ((Number) countSpinner.getValue()).intValue();
         SpinnerNumberModel model = (SpinnerNumberModel) levelSpinner.getModel();
         model.setMaximum(settings.count);
+        int selected = Math.min(settings.count, ((Number) levelSpinner.getValue()).intValue());
+        if (((Number) levelSpinner.getValue()).intValue() != selected) levelSpinner.setValue(selected);
         settings.selectedLevel = ((Number) levelSpinner.getValue()).intValue();
         settings.xFraction = positionSlider.getValue() / 1000.0;
         double x = settings.widthNm * settings.xFraction;
@@ -304,12 +304,7 @@ public final class PotentialWellVisualizer {
             return plotBottom - (int) Math.round((level - 0.5) * (plotBottom - plotTop) / settings.count);
         }
         private int nearestLevel(int clickedY) {
-            int best = -1, minDist = 18;
-            for (int n = 1; n <= settings.count; n++) {
-                int distance = Math.abs(clickedY - yForLevel(n));
-                if (distance < minDist) { minDist = distance; best = n; }
-            }
-            return best;
+            return levelAtY(clickedY, getHeight(), settings.count);
         }
         @Override protected void paintComponent(Graphics graphics) {
             super.paintComponent(graphics);
@@ -344,6 +339,14 @@ public final class PotentialWellVisualizer {
             }
             lightLabel(g, "Вертикальная шкала схематическая", 16, getHeight() - 21);
         }
+    }
+
+    /** Вся полоса вокруг уровня кликабельна; её высота зависит от размера графика. */
+    static int levelAtY(int clickedY, int height, int count) {
+        int top = 95, bottom = Math.max(top + 1, height - 81);
+        if (clickedY < top || clickedY > bottom) return -1;
+        int band = Math.min(count - 1, (int) ((long) (clickedY - top) * count / (bottom - top)));
+        return count - band;
     }
 
     /** Аналитический график ψ_n(x) или ρ_n(x) с перемещаемым указателем x. */

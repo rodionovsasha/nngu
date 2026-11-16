@@ -6,11 +6,16 @@ public record QuantumWellModel(double widthNm, double massRatio, int count, int 
     public static final double LIGHT_SPEED = 299_792_458.0;
 
     public QuantumWellModel {
-        if (!Double.isFinite(widthNm) || widthNm < 0.05 || widthNm > 10
-                || !Double.isFinite(massRatio) || massRatio < 0.05 || massRatio > 100
-                || count < 1 || count > 10 || level < 1 || level > count
-                || !Double.isFinite(xFraction) || xFraction < 0 || xFraction > 1) {
-            throw new IllegalArgumentException("L: 0.05..10 нм; m/mₑ: 0.05..100; 1 ≤ n ≤ N ≤ 10; x/L: 0..1");
+        requireRange("L, нм", widthNm, 0.05, 10);
+        requireRange("m/mₑ", massRatio, 0.05, 100);
+        if (count < 1 || count > 10) throw new IllegalArgumentException("N: 1..10");
+        if (level < 1 || level > count) throw new IllegalArgumentException("n: 1..N (N=" + count + ")");
+        requireRange("x/L", xFraction, 0, 1);
+    }
+
+    private static void requireRange(String name, double value, double min, double max) {
+        if (!Double.isFinite(value) || value < min || value > max) {
+            throw new IllegalArgumentException(name + ": конечное число в диапазоне " + min + ".." + max);
         }
     }
 
@@ -20,7 +25,7 @@ public record QuantumWellModel(double widthNm, double massRatio, int count, int 
         return PotentialWellSpectrum.energyJoules(n, massRatio * ELECTRON_MASS, widthNm * 1e-9) / EV;
     }
     public double electronEnergyEv(int n) {
-        return ElectronPhotonTransition.energyJoules(n, widthNm * 1e-9) / EV;
+        return electronEnergyJoules(n) / EV;
     }
     public double psi(double fraction) {
         return PotentialWellSpectrum.waveFunction(level, fraction * widthNm, widthNm);
@@ -28,9 +33,13 @@ public record QuantumWellModel(double widthNm, double massRatio, int count, int 
     public double density(double fraction) {
         return PotentialWellSpectrum.probabilityDensity(level, fraction * widthNm, widthNm);
     }
-    public double deltaEv() { return electronEnergyEv(2) - electronEnergyEv(1); }
-    public double wavelengthNm() { return PLANCK * LIGHT_SPEED / (deltaEv() * EV) * 1e9; }
-    public double frequencyHz() { return deltaEv() * EV / PLANCK; }
+    private double electronEnergyJoules(int n) {
+        return ElectronPhotonTransition.energyJoules(n, widthNm * 1e-9);
+    }
+    public double deltaJoules() { return electronEnergyJoules(2) - electronEnergyJoules(1); }
+    public double deltaEv() { return deltaJoules() / EV; }
+    public double wavelengthNm() { return PLANCK * LIGHT_SPEED / deltaJoules() * 1e9; }
+    public double frequencyHz() { return deltaJoules() / PLANCK; }
 
     /** Фаза ψ(t) = ψ(0) exp(-iEt/ℏ). Экранное время замедлено, E/E₁ = n². */
     public double phase(double animationSeconds) {

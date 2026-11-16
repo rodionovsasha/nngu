@@ -3,7 +3,10 @@
 Запуск: python3 python/potential_well_spectrum.py [L_нм] [уровни] [m/m_e] [x_нм]
 """
 import argparse
-from physics import ELECTRON_VOLT, energy_joules, parse_float, probability_density, wave_function
+if __package__:
+    from .physics import ELECTRON_VOLT, energy_joules, parse_float, probability_density, wave_function
+else:
+    from physics import ELECTRON_VOLT, energy_joules, parse_float, probability_density, wave_function
 
 
 def main(argv: list[str] | None = None) -> None:

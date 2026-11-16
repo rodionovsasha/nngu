@@ -657,3 +657,41 @@ bash record-demo-macos.command
 редактирования и скопируйте полученный URL вложения в отдельный абзац README. Создавать Issue/PR только ради записи
 не требуется. Файл меньше 10 МБ; GitHub принимает MP4 и рекомендует H.264 для совместимости браузеров
 ([официальная инструкция и лимиты](https://docs.github.com/en/get-started/writing-on-github/working-with-advanced-formatting/attaching-files)).
+
+## 14. Windows и Linux
+
+Для общей сборки нужны **JDK 25**, **Python 3.10+**, **.NET SDK 8+** и **Node.js 20+** (для регрессионных проверок
+HTML). Зависимости новых GUI скачивает Gradle Wrapper. На Windows команды `python`, `java`, `javac`, `jar`,
+`dotnet` и `node` должны быть доступны через PATH; на Linux/macOS для Python используется `python3`.
+
+| Действие | Linux / macOS | Windows cmd / PowerShell |
+|---|---|---|
+| Собрать и проверить все реализации | `sh build-all.sh` | `.\build-all.bat` |
+| Запустить JavaFX | `sh run-javafx.sh` | `.\run-javafx.bat` |
+| Запустить Compose | `sh run-compose.sh` | `.\run-compose.bat` |
+| Запустить собранный Swing | `java -jar build/legacy/PotentialWellVisualizer.jar` | `java -jar build/legacy/PotentialWellVisualizer.jar` |
+
+Скрипты запуска GUI принимают аргументы Gradle, например `sh run-javafx.sh --args='--transition'`.
+Для сборки только новых GUI и общей модели по-прежнему достаточно `./gradlew build` / `.\gradlew.bat build`:
+Python, .NET и Node.js этой команде не нужны.
+
+Общая сборка использует `tools/build_all.py`, сохраняет Swing JAR/PNG в `build/legacy/`, проверяет физические
+формулы, масштабирование выбора уровней Swing, оба способа запуска Python, синхронизацию HTML-полей и реальные
+события мыши Compose. Для отдельной проверки:
+
+```bash
+python3 -m python.potential_well_spectrum 0.6 5 1 0.15
+python3 -m python.electron_photon_transition 0.6
+python3 -m python.potential_well_visualizer --no-open
+python3 -m unittest python.test_quantum_well python.test_cli -v
+node --test tests/web-ui.test.cjs
+./gradlew check
+```
+
+Прямой запуск Python-файлов также поддерживается. `python/__init__.py` задаёт пакет, а импорты явно различают
+пакетный и файловый запуск, не маскируя ошибки импортируемых модулей.
+
+Проверка HTML выполняется без браузера и проверяет состояние полей и подписей; отрисовку Canvas она не проверяет.
+Тест Compose посылает press/move/release в настоящий `ImageComposeScene`, включая клик после перетаскивания.
+На Linux тест реальных Swing-контролов можно запустить через виртуальный дисплей:
+`xvfb-run -a java -cp build/legacy/classes SwingInteractionSelfTest --gui`.

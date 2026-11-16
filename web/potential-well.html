@@ -82,6 +82,7 @@
     const L=number('width',.05,10,.6),m=number('mass',.05,100,1);
     const count=Math.round(number('count',1,10,5)); $('level').max=String(count);
     const n=Math.round(number('level',1,count,1)),f=Number($('position').value)/1000;
+    $('count').value=String(count); $('level').value=String(n);
     return {L,m,count,n,f,x:L*f};
   }
   const energy=(n,L,m=1)=>n*n*H*H/(8*ME*m*(L*1e-9)**2)/EV;

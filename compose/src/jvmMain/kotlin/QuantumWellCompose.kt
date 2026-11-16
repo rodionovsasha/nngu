@@ -253,7 +253,7 @@ private fun TabButton(text: String, selected: Boolean, onClick: () -> Unit) {
 }
 
 @Composable
-private fun QuantumPlot(
+internal fun QuantumPlot(
     model: QuantumWellModel, transition: Boolean, effects: Boolean, seconds: () -> Double,
     modifier: Modifier, onChange: (QuantumWellModel) -> Unit
 ) {
